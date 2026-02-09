@@ -17,8 +17,6 @@ interface UseChatReturn {
     error: string | null;
     sendMessage: (content: string) => Promise<void>;
     clearMessages: () => void;
-    currentProject: string;
-    setCurrentProject: (project: string) => void;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -28,7 +26,6 @@ export function useChat(): UseChatReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const messageIdRef = useRef(0);
-    const [currentProject, setCurrentProject] = useState<string>('');
 
     const sendMessage = useCallback(async (content: string) => {
         const userMessage: Message = {
@@ -50,7 +47,6 @@ export function useChat(): UseChatReturn {
                 },
                 body: JSON.stringify({
                     message: content,
-                    project: currentProject, // Send selected project context
                     conversationHistory: messages.map((m) => ({
                         role: m.role,
                         content: m.content,
@@ -116,7 +112,7 @@ export function useChat(): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, currentProject]);
+    }, [messages]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);
@@ -129,7 +125,5 @@ export function useChat(): UseChatReturn {
         error,
         sendMessage,
         clearMessages,
-        currentProject,
-        setCurrentProject,
     };
 }

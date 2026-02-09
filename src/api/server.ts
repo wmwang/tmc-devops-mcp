@@ -5,7 +5,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { chatRouter } from "./routes/chat.js";
-import { projectsRouter } from "./routes/projects.js";
 import { logger } from "../logger.js";
 
 const app = express();
@@ -17,7 +16,6 @@ app.use(express.json());
 
 // Routes
 app.use("/api/chat", chatRouter);
-app.use("/api/projects", projectsRouter);
 
 // Health check
 app.get("/api/health", (req, res) => {

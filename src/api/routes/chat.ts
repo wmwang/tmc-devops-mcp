@@ -12,20 +12,19 @@ const reactEngine = new ReActEngine();
 
 interface ChatRequest {
     message: string;
-    project?: string;
     conversationHistory?: Array<{ role: string; content: string }>;
 }
 
 chatRouter.post("/", async (req: Request, res: Response) => {
     try {
-        const { message, project, conversationHistory = [] } = req.body as ChatRequest;
+        const { message, conversationHistory = [] } = req.body as ChatRequest;
 
         if (!message) {
             res.status(400).json({ error: "Message is required" });
             return;
         }
 
-        logger.info(`Received chat message: ${message}, project: ${project || 'none'}`);
+        logger.info(`Received chat message: ${message}`);
 
         // Set headers for Server-Sent Events (SSE)
         res.setHeader("Content-Type", "text/event-stream");
@@ -35,7 +34,7 @@ chatRouter.post("/", async (req: Request, res: Response) => {
         // Process with ReAct engine
         await reactEngine.process(message, conversationHistory as ChatMessage[], (chunk: StreamChunk) => {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
-        }, project);
+        });
 
         res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
         res.end();
@@ -48,14 +47,14 @@ chatRouter.post("/", async (req: Request, res: Response) => {
 // Simple non-streaming endpoint for testing
 chatRouter.post("/simple", async (req: Request, res: Response) => {
     try {
-        const { message, project, conversationHistory = [] } = req.body as ChatRequest;
+        const { message, conversationHistory = [] } = req.body as ChatRequest;
 
         if (!message) {
             res.status(400).json({ error: "Message is required" });
             return;
         }
 
-        const result = await reactEngine.processSimple(message, conversationHistory as ChatMessage[], project);
+        const result = await reactEngine.processSimple(message, conversationHistory as ChatMessage[]);
         res.json(result);
     } catch (error) {
         logger.error("Chat error:", error);

@@ -8,20 +8,10 @@ import {
     makeStyles,
     tokens,
     shorthands,
-    Dropdown,
-    Option,
-    type OptionOnSelectData,
-    type SelectionEvents,
-    Label,
 } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
 import { useChat } from '../hooks/useChat';
 import { MessageBubble } from './MessageBubble';
-
-interface Project {
-    id: string;
-    name: string;
-}
 
 const useStyles = makeStyles({
     container: {
@@ -76,26 +66,9 @@ const useStyles = makeStyles({
 
 export function ChatWindow() {
     const styles = useStyles();
-    const { messages, isLoading, error, sendMessage, currentProject, setCurrentProject } = useChat();
+    const { messages, isLoading, error, sendMessage } = useChat();
     const [inputValue, setInputValue] = useState('');
-    const [projects, setProjects] = useState<Project[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        // Fetch projects on mount
-        fetch('http://localhost:3001/api/projects')
-            .then((res) => res.json())
-            .then((data) => {
-                if (Array.isArray(data)) {
-                    setProjects(data);
-                    // Optional: set first project as default if none selected
-                    // if (data.length > 0 && !currentProject) {
-                    //    setCurrentProject(data[0].name);
-                    // }
-                }
-            })
-            .catch((err) => console.error('Failed to fetch projects:', err));
-    }, []);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,29 +90,8 @@ export function ChatWindow() {
     return (
         <div className={styles.container}>
             {/* Header */}
-            <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className={styles.header}>
                 <Text className={styles.headerTitle}>TMC DevOps AI 助手</Text>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Label style={{ color: tokens.colorNeutralForegroundOnBrand }}>Project Context:</Label>
-                    <Dropdown
-                        aria-labelledby="project-dropdown"
-                        placeholder="Select a project"
-                        value={currentProject}
-                        selectedOptions={currentProject ? [currentProject] : []}
-                        onOptionSelect={(_e: SelectionEvents, data: OptionOnSelectData) => {
-                            if (data.optionValue) {
-                                setCurrentProject(data.optionValue);
-                            }
-                        }}
-                        style={{ minWidth: '150px' }}
-                    >
-                        {projects.map((option) => (
-                            <Option key={option.id} value={option.name}>
-                                {option.name}
-                            </Option>
-                        ))}
-                    </Dropdown>
-                </div>
             </div>
 
             {/* Messages */}

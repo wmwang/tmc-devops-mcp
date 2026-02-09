@@ -44,7 +44,8 @@ export class MCPBridge {
 
         this.toolHandlers.set("core_list_project_teams", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            if (!project) throw new Error("Project parameter is required");
             const coreApi = await this.connection.getCoreApi();
             return await coreApi.getTeams(project);
         });
@@ -52,7 +53,8 @@ export class MCPBridge {
         // Repository tools
         this.toolHandlers.set("repo_list_repos_by_project", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            if (!project) throw new Error("Project parameter is required");
             const gitApi = await this.connection.getGitApi();
             return await gitApi.getRepositories(project);
         });
@@ -60,7 +62,8 @@ export class MCPBridge {
         // Pipeline tools
         this.toolHandlers.set("pipelines_get_builds", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            if (!project) throw new Error("Project parameter is required");
             const top = (params.top as number) || 10;
             const buildApi = await this.connection.getBuildApi();
             return await buildApi.getBuilds(project, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, top);
@@ -68,7 +71,8 @@ export class MCPBridge {
 
         this.toolHandlers.set("pipelines_get_build_definitions", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            if (!project) throw new Error("Project parameter is required");
             const buildApi = await this.connection.getBuildApi();
             return await buildApi.getDefinitions(project);
         });
@@ -77,7 +81,8 @@ export class MCPBridge {
         this.toolHandlers.set("wit_get_work_item", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
             const id = params.id as number;
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            // project is optional for getWorkItem but good to have
             const witApi = await this.connection.getWorkItemTrackingApi();
             return await witApi.getWorkItem(id, undefined, undefined, undefined, project);
         });
@@ -85,7 +90,8 @@ export class MCPBridge {
         // Search work items by title (handles empty query by listing all)
         this.toolHandlers.set("search_workitem", async (params) => {
             if (!this.connection) throw new Error("Not connected to Azure DevOps");
-            const project = params.project as string;
+            const project = (params.project as string) || process.env.DEFAULT_PROJECT;
+            if (!project) throw new Error("Project parameter is required");
             const query = params.query as string;
             const witApi = await this.connection.getWorkItemTrackingApi();
 
