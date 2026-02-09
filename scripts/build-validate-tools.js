@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 import { readFileSync } from "fs";

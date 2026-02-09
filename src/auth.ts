@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 import { AzureCliCredential, ChainedTokenCredential, DefaultAzureCredential, TokenCredential } from "@azure/identity";

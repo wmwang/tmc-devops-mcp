@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 export const apiVersion = "7.2-preview.1";

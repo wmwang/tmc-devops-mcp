@@ -31,7 +31,7 @@ export default tseslint.config(
       header: pluginHeader,
     },
     rules: {
-      "header/header": ["error", "line", [" Copyright (c) Microsoft Corporation.", " Licensed under the MIT License."], 2],
+      "header/header": ["error", "line", [" Copyright (c) TMC Ltd.", " Licensed under the MIT License."], 2],
     },
   },
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 import { AlertType, AlertValidityStatus, Confidence, Severity, State } from "azure-devops-node-api/interfaces/AlertInterfaces";

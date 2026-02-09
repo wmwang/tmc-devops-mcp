@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 import { describe, expect, it, beforeEach, afterEach } from "@jest/globals";

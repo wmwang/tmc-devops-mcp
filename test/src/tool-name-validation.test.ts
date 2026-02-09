@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
 import { validateToolName, validateParameterName, extractToolNames, extractParameterNames } from "../../src/shared/tool-validation";

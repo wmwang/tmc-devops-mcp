@@ -130,6 +130,62 @@ Open GitHub Copilot Chat and try a prompt like `List ADO projects`. The first ti
 
 See the [getting started documentation](./docs/GETTINGSTARTED.md) to use our MCP Server with other tools such as Visual Studio 2022, Claude Code, and Cursor.
 
+## 🛠️ 開發環境設定 (Development Setup)
+
+如果你正在開發或修改此 MCP Server，需要使用本地編譯的版本進行測試，請依照以下步驟設定：
+
+### 1. 編譯專案
+
+```bash
+npm install
+npm run build
+```
+
+### 2. 設定 mcp.json (本地開發版)
+
+在你的專案中建立 `.vscode/mcp.json`，使用 `node` 直接執行編譯後的 `dist/index.js`：
+
+```json
+{
+  "servers": {
+    "tmc-devops-mcp-dev": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/path/to/tmc-devops-mcp/dist/index.js",
+        "你的organization名稱"
+      ],
+      "env": {
+        "LOG_LEVEL": "debug"
+      }
+    }
+  }
+}
+```
+
+> ⚠️ **注意**：請將 `/path/to/tmc-devops-mcp/` 替換為你實際的專案絕對路徑，並將 `你的organization名稱` 替換為實際的 Azure DevOps organization 名稱。
+
+### 3. 使用 Watch 模式開發
+
+開發時可以開啟 TypeScript watch 模式，自動重新編譯：
+
+```bash
+npm run watch
+```
+
+每次修改程式碼後，只需在 VS Code 中重新啟動 MCP Server 即可測試新的變更。
+
+### 4. 使用 MCP Inspector 調試
+
+專案內建 MCP Inspector 支援，可以用來檢視工具定義和測試：
+
+```bash
+npm run inspect
+```
+
+這會啟動一個可視化介面，讓你可以直接測試各個工具的輸入輸出。
+
+
 ## 🌏 Using Domains
 
 Azure DevOps exposes a large surface area. As a result, our Azure DevOps MCP Server includes many tools. To keep the toolset manageable, avoid confusing the model, and respect client limits on loaded tools, use Domains to load only the areas you need. Domains are named groups of related tools (for example: core, work, work-items, repositories, wiki). Add the `-d` argument and the domain names to the server args in your `mcp.json` to list the domains to enable.
