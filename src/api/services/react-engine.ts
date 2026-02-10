@@ -20,7 +20,7 @@ export interface StreamChunk {
 export class ReActEngine {
     private openai: OpenAI;
     private mcpClient: MCPClient;
-    private maxIterations: number = 10;
+    private maxIterations: number = 15;
     private initialized: boolean = false;
 
     constructor(mcpClient: MCPClient) {
@@ -58,6 +58,7 @@ export class ReActEngine {
         ];
 
         let iteration = 0;
+        let consecutiveNoAction = 0;
 
         while (iteration < this.maxIterations) {
             iteration++;
@@ -80,6 +81,8 @@ export class ReActEngine {
             }
 
             if (parsed.action && parsed.actionInput) {
+                consecutiveNoAction = 0;
+
                 onChunk({
                     type: "action",
                     content: `執行工具: ${parsed.action}`,
@@ -92,7 +95,6 @@ export class ReActEngine {
                         parsed.actionInput
                     );
 
-                    // MCP Client 的 callTool 已經回傳文字
                     const observation = result;
                     onChunk({ type: "observation", content: observation });
 
@@ -112,10 +114,39 @@ export class ReActEngine {
                         content: `Observation: Error - ${errorMsg}`,
                     });
                 }
+            } else if (parsed.action && !parsed.actionInput) {
+                // LLM 輸出了 Action 但沒有 Action Input，提示它補全
+                consecutiveNoAction++;
+                logger.warn(`Iteration ${iteration}: Action found but no Action Input, prompting LLM to complete`);
+                messages.push({ role: "assistant", content: response });
+                messages.push({
+                    role: "user",
+                    content: `你只輸出了 Action: ${parsed.action}，但缺少 Action Input。請重新輸出完整的格式，包含 Action Input（JSON 格式的參數）。`,
+                });
             } else {
-                // No action found, treat as final answer
-                onChunk({ type: "answer", content: response });
-                break;
+                // 沒有 Action 也沒有 Final Answer
+                consecutiveNoAction++;
+
+                if (consecutiveNoAction >= 2) {
+                    // 連續兩次都沒有正確格式，直接把回應當最終答案
+                    logger.warn(`Iteration ${iteration}: ${consecutiveNoAction} consecutive responses without action, treating as final answer`);
+                    onChunk({ type: "answer", content: response });
+                    break;
+                }
+
+                // 第一次沒有正確格式，提示 LLM 遵循格式
+                logger.warn(`Iteration ${iteration}: No action or final answer found, prompting LLM to follow format`);
+                messages.push({ role: "assistant", content: response });
+                messages.push({
+                    role: "user",
+                    content: `請使用正確的格式回應。如果你需要呼叫工具，請使用：
+Thought: （你的推理）
+Action: （工具名稱）
+Action Input: （JSON 參數）
+
+如果你已經有足夠資訊回答，請使用：
+Final Answer: （你的回答）`,
+                });
             }
         }
 
@@ -151,8 +182,8 @@ export class ReActEngine {
                 role: m.role,
                 content: m.content,
             })),
-            temperature: 0.2,
-            max_tokens: 2000,
+            temperature: 0.1,
+            max_tokens: 4000,
         });
 
         return response.choices[0]?.message?.content || "";
