@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import OpenAI from "openai";
-import { MCPBridge } from "./mcp-bridge.js";
+import { MCPClient } from "./mcp-client.js";
 import { getSystemPrompt } from "../prompts/system-prompt.js";
 import { parseAction, ActionResult } from "./action-parser.js";
 import { logger } from "../../logger.js";
@@ -19,15 +19,28 @@ export interface StreamChunk {
 
 export class ReActEngine {
     private openai: OpenAI;
-    private mcpBridge: MCPBridge;
+    private mcpClient: MCPClient;
     private maxIterations: number = 10;
+    private initialized: boolean = false;
 
-    constructor() {
+    constructor(mcpClient: MCPClient) {
         this.openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY || "",
             baseURL: process.env.OPENAI_BASE_URL,
         });
-        this.mcpBridge = new MCPBridge();
+        this.mcpClient = mcpClient;
+    }
+
+    /**
+     * 確保 MCP Client 已連線
+     */
+    private async ensureInitialized(): Promise<void> {
+        if (!this.initialized) {
+            if (!this.mcpClient.isConnected()) {
+                await this.mcpClient.connect();
+            }
+            this.initialized = true;
+        }
     }
 
     async process(
@@ -35,8 +48,11 @@ export class ReActEngine {
         conversationHistory: ChatMessage[],
         onChunk: (chunk: StreamChunk) => void
     ): Promise<void> {
+        await this.ensureInitialized();
+
+        const tools = this.mcpClient.getToolInfos();
         const messages: ChatMessage[] = [
-            { role: "system", content: getSystemPrompt() },
+            { role: "system", content: getSystemPrompt(tools) },
             ...conversationHistory,
             { role: "user", content: userMessage },
         ];
@@ -69,14 +85,15 @@ export class ReActEngine {
                     content: `執行工具: ${parsed.action}`,
                 });
 
-                // Execute the action via MCP bridge
+                // Execute the action via MCP Client
                 try {
-                    const result = await this.mcpBridge.executeAction(
+                    const result = await this.mcpClient.callTool(
                         parsed.action,
                         parsed.actionInput
                     );
 
-                    const observation = JSON.stringify(result, null, 2);
+                    // MCP Client 的 callTool 已經回傳文字
+                    const observation = result;
                     onChunk({ type: "observation", content: observation });
 
                     // Add to conversation for next iteration

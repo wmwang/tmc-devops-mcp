@@ -1,26 +1,13 @@
 // Copyright (c) TMC Ltd.
 // Licensed under the MIT License.
 
-import { MCPBridge } from "../services/mcp-bridge.js";
+import type { ToolInfo } from "../services/mcp-client.js";
 
-const mcpBridge = new MCPBridge();
-const tools = mcpBridge.getAvailableTools();
-
-const toolDescriptions: Record<string, string> = {
-    core_list_projects: "列出組織中的所有專案",
-    core_list_project_teams: "列出專案中的團隊。參數: project (專案名稱)",
-    repo_list_repos_by_project: "列出專案中的儲存庫。參數: project (專案名稱)",
-    pipelines_get_builds: "取得建置紀錄。參數: project (專案名稱), top (數量，預設10)",
-    pipelines_get_build_definitions: "取得 Pipeline 定義。參數: project (專案名稱)",
-    wit_get_work_item: "取得工作項目詳情。參數: project (專案名稱), id (工作項目ID)",
-    search_workitem: "搜尋工作項目。參數: project (專案名稱), query (搜尋關鍵字)",
-};
-
-export function getSystemPrompt(): string {
+export function getSystemPrompt(tools: ToolInfo[]): string {
     const defaultProject = process.env.DEFAULT_PROJECT || "";
 
     const toolList = tools
-        .map((t) => `- ${t}: ${toolDescriptions[t] || "Azure DevOps 工具"}`)
+        .map((t) => `- ${t.name}: ${t.description || "Azure DevOps 工具"}`)
         .join("\n");
 
     const defaultProjectSection = defaultProject
@@ -74,4 +61,3 @@ Final Answer: 您的組織中有 2 個專案：
 2. **test** - 狀態正常
 `;
 }
-

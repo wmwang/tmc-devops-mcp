@@ -3,12 +3,15 @@
 
 import { Router, Request, Response } from "express";
 import { ReActEngine } from "../services/react-engine.js";
+import { MCPClient } from "../services/mcp-client.js";
 import { logger } from "../../logger.js";
 import type { ChatMessage, StreamChunk } from "../services/react-engine.js";
 
 export const chatRouter = Router();
 
-const reactEngine = new ReActEngine();
+// 建立共享的 MCP Client 和 ReAct Engine
+const mcpClient = new MCPClient();
+const reactEngine = new ReActEngine(mcpClient);
 
 interface ChatRequest {
     message: string;
@@ -61,3 +64,6 @@ chatRouter.post("/simple", async (req: Request, res: Response) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
+// 匯出 mcpClient 讓 server.ts 可以管理它的生命週期
+export { mcpClient };

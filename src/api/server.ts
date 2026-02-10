@@ -4,7 +4,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { chatRouter } from "./routes/chat.js";
+import { chatRouter, mcpClient } from "./routes/chat.js";
 import { logger } from "../logger.js";
 
 const app = express();
@@ -19,7 +19,11 @@ app.use("/api/chat", chatRouter);
 
 // Health check
 app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+    res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        mcpConnected: mcpClient.isConnected(),
+    });
 });
 
 // Error handling
@@ -36,9 +40,22 @@ app.use(
 );
 
 export function startApiServer() {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         logger.info(`TMC DevOps API Server running on http://localhost:${PORT}`);
     });
+
+    // Graceful shutdown: 關閉 MCP Client 子進程
+    const shutdown = async (signal: string) => {
+        logger.info(`Received ${signal}, shutting down...`);
+        await mcpClient.disconnect();
+        server.close(() => {
+            logger.info("API Server closed");
+            process.exit(0);
+        });
+    };
+
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
 // Auto-start when run directly
