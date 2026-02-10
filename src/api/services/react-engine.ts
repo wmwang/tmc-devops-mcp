@@ -64,7 +64,7 @@ export class ReActEngine {
             iteration++;
             logger.info(`ReAct iteration ${iteration}`);
 
-            // Get LLM response
+            // Get LLM response (Using Streaming)
             const response = await this.callLLM(messages);
             logger.debug(`LLM response: ${response}`);
 
@@ -176,7 +176,8 @@ Final Answer: （你的回答）`,
     }
 
     private async callLLM(messages: ChatMessage[]): Promise<string> {
-        const response = await this.openai.chat.completions.create({
+        // 使用 stream: true 以符合內部 LLM 需求
+        const stream = await this.openai.chat.completions.create({
             model: process.env.OPENAI_MODEL || "gpt-4o",
             messages: messages.map((m) => ({
                 role: m.role,
@@ -184,8 +185,15 @@ Final Answer: （你的回答）`,
             })),
             temperature: 0.1,
             max_tokens: 4000,
+            stream: true,
         });
 
-        return response.choices[0]?.message?.content || "";
+        let fullContent = "";
+        for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            fullContent += content;
+        }
+
+        return fullContent;
     }
 }
