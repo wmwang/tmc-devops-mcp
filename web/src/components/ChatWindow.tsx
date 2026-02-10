@@ -212,6 +212,21 @@ const useStyles = makeStyles({
     input: {
         flexGrow: 1,
     },
+    /* ─── Resize Handle ─── */
+    resizer: {
+        width: '4px',
+        cursor: 'col-resize',
+        backgroundColor: tokens.colorNeutralStroke2,
+        ':hover': {
+            backgroundColor: tokens.colorBrandBackground,
+        },
+        transition: 'background-color 0.2s',
+        zIndex: 10,
+    },
+    resizerActive: {
+        backgroundColor: tokens.colorBrandBackground,
+        cursor: 'col-resize',
+    },
 });
 
 /* ── Component ── */
@@ -221,11 +236,46 @@ export function ChatWindow() {
     const { toolsData, isLoading: toolsLoading } = useTools();
     const [inputValue, setInputValue] = useState('');
     const [expandedCats, setExpandedCats] = useState<Set<number>>(new Set());
+
+    // Sidebar resizing state
+    const [sidebarWidth, setSidebarWidth] = useState(280);
+    const [isResizing, setIsResizing] = useState(false);
+    const sidebarRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Resizing logic
+    const startResizing = useCallback(() => {
+        setIsResizing(true);
+    }, []);
+
+    const stopResizing = useCallback(() => {
+        setIsResizing(false);
+    }, []);
+
+    const resize = useCallback(
+        (mouseMoveEvent: MouseEvent) => {
+            if (isResizing) {
+                const newWidth = mouseMoveEvent.clientX;
+                if (newWidth >= 200 && newWidth <= 600) {
+                    setSidebarWidth(newWidth);
+                }
+            }
+        },
+        [isResizing]
+    );
+
+    useEffect(() => {
+        window.addEventListener('mousemove', resize);
+        window.addEventListener('mouseup', stopResizing);
+        return () => {
+            window.removeEventListener('mousemove', resize);
+            window.removeEventListener('mouseup', stopResizing);
+        };
+    }, [resize, stopResizing]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -244,9 +294,13 @@ export function ChatWindow() {
     }, [sendMessage]);
 
     return (
-        <div className={styles.layout}>
+        <div className={styles.layout} style={{ cursor: isResizing ? 'col-resize' : 'default' }}>
             {/* ════════ Left Sidebar ════════ */}
-            <div className={styles.sidebar}>
+            <div
+                className={styles.sidebar}
+                style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+                ref={sidebarRef}
+            >
                 {/* Logo + Status */}
                 <div className={styles.sidebarHeader}>
                     <Text className={styles.sidebarTitle}>TMC DevOps AI</Text>
@@ -322,6 +376,12 @@ export function ChatWindow() {
                     </>
                 )}
             </div>
+
+            {/* ════════ Resizer Handle ════════ */}
+            <div
+                className={`${styles.resizer} ${isResizing ? styles.resizerActive : ''}`}
+                onMouseDown={startResizing}
+            />
 
             {/* ════════ Right Chat Panel ════════ */}
             <div className={styles.chatPanel}>
