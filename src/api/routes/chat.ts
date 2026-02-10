@@ -65,5 +65,67 @@ chatRouter.post("/simple", async (req: Request, res: Response) => {
     }
 });
 
+// 取得 MCP 工具清單（分類後）
+chatRouter.get("/tools", async (_req: Request, res: Response) => {
+    try {
+        // 確保 MCP Client 已連線
+        if (!mcpClient.isConnected()) {
+            await mcpClient.connect();
+        }
+
+        const tools = mcpClient.getToolInfos();
+
+        // 將工具按前綴分類
+        const categories: Record<string, { name: string; tools: Array<{ name: string; description: string }> }> = {};
+        const categoryMeta: Record<string, { label: string; icon: string }> = {
+            core: { label: "組織與專案", icon: "🏢" },
+            repo: { label: "儲存庫與 PR", icon: "📁" },
+            wit: { label: "工作項目", icon: "📋" },
+            pipelines: { label: "Pipeline", icon: "🔧" },
+            work: { label: "迭代與容量", icon: "📅" },
+            search: { label: "搜尋", icon: "🔍" },
+            wiki: { label: "Wiki", icon: "📖" },
+            testplan: { label: "測試計畫", icon: "🧪" },
+            advsec: { label: "進階安全性", icon: "🔒" },
+        };
+
+        for (const tool of tools) {
+            const prefix = tool.name.split("_")[0];
+            if (!categories[prefix]) {
+                const meta = categoryMeta[prefix] || { label: prefix, icon: "📌" };
+                categories[prefix] = {
+                    name: `${meta.icon} ${meta.label}`,
+                    tools: [],
+                };
+            }
+            categories[prefix].tools.push({
+                name: tool.name,
+                description: tool.description,
+            });
+        }
+
+        res.json({
+            connected: true,
+            totalTools: tools.length,
+            categories: Object.values(categories),
+        });
+    } catch (error) {
+        logger.error("Tools list error:", error);
+        res.json({
+            connected: false,
+            totalTools: 0,
+            categories: [],
+        });
+    }
+});
+
+// 取得 MCP 連線狀態
+chatRouter.get("/status", (_req: Request, res: Response) => {
+    res.json({
+        connected: mcpClient.isConnected(),
+        totalTools: mcpClient.isConnected() ? mcpClient.getToolInfos().length : 0,
+    });
+});
+
 // 匯出 mcpClient 讓 server.ts 可以管理它的生命週期
 export { mcpClient };

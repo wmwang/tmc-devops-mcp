@@ -1,6 +1,6 @@
 import { createLightTheme, createDarkTheme, type BrandVariants } from '@fluentui/react-components';
 
-// TMC brand colors (Microsoft-inspired blue)
+// TMC brand colors (modern blue-purple gradient inspired)
 const tmcBrand: BrandVariants = {
     10: '#020305',
     20: '#111723',
@@ -23,5 +23,5 @@ const tmcBrand: BrandVariants = {
 export const tmcLightTheme = createLightTheme(tmcBrand);
 export const tmcDarkTheme = createDarkTheme(tmcBrand);
 
-// Ensure we're using light theme as default
+// 使用淺色主題
 export const defaultTheme = tmcLightTheme;
